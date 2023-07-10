@@ -3,7 +3,7 @@
 # Importing Libraries
 import numpy as np
 from scipy.integrate import odeint
-
+import matplotlib.pyplot as plt
 # %%
 # Basic conditions
 L = 1
@@ -15,7 +15,7 @@ rho_s = 1000    # kg/m^3
 dp = 0.02       # m (particle diameter)
 #mu = [1.81, 1.81] # Pa sec (visocisty of gas)
 mu_av = 1.81E-5
-n_comp = 2
+n_comp = 3
 
 # %%
 # Pressure boundary conditions
@@ -25,7 +25,7 @@ T_feed = 300    # K
 P_feed = 2      # bar
 #################################
 u_feed = 0.1            # m/s
-y_feed = [0.2, 0.8]
+y_feed = [0.2, 0.3, 0.5]
 
 # %%
 ## Ergun equation
@@ -52,7 +52,6 @@ z = np.linspace(0,L, N)
 P = DPDz*1E-5*z + P_0   # bar
 C = P*1E5/Rgas/T_feed   # mol/m^3
 print(P)
-print (C)
 
 # %%
 # backward FDM
@@ -87,15 +86,15 @@ def isomix(P_in,T):
         #ind_tmp = P_in[ii] < 1E-4
         #p_tmp[ind_tmp] = 0
         pp.append(p_tmp)
-    q1 = 1*pp[0]*0.05/(1 + 0.3*pp[0] + 0.05*pp[1])
-    q2 = 3*pp[1]*0.3/(1 + 0.3*pp[0] + 0.05*pp[1])
-    return [q1, q2]
-
+    q1 = 1*pp[0]*0.05/(1 + 0.3*pp[0] + 0.05*pp[1] + 0.4*pp[2])
+    q2 = 3*pp[1]*0.3/(1 + 0.3*pp[0] + 0.05*pp[1] + 0.4*pp[2])
+    q3 = 4*pp[2]*0.4/(1 + 0.3*pp[0] + 0.05*pp[1] + 0.4*pp[2])
+    return [q1, q2, q3]
 
 # %%
 # Info for mass transfer
-k = [0.5, 0.5]
-D_AB = [1E-6, 1E-6]
+k = [1.5, 1.5, 1.5]
+D_AB = [1E-6, 1E-6, 1E-6]
 # %%
 # ODE for mass balance
 def massbal(y,t):
@@ -119,7 +118,7 @@ def massbal(y,t):
     P_part.append(P*y_rest)
     #print('Shape of P_part[0]',P_part[0].shape)
     q = []
-    for ii in range(n_comp-1,2*n_comp-1):
+    for ii in range(n_comp-1, 2*n_comp-1):
         q.append(y[ii*N:(ii+1)*N])
     # Solid uptake component
     dqdt = []
@@ -166,15 +165,19 @@ def massbal(y,t):
 
 # %% 
 # Initial value
-y0 = np.zeros(N*3)
-y0[:N] = 1.0
+y0 = np.zeros(N*5)
+y0[:N] = 0.8
+y0[N:2*N] = 0.2
 P0_1 = P_0*y0[0:N]
-P0_2 = P_0*(1-y0[0:N])
-print('Here')
-q0_1,q0_2 = isomix([P0_1,P0_2], 300)
+P0_2 = P_0*y0[N:2*N]
+P0_3 = P_0*(1-y0[0:N]-y0[N:2*N])
 
-y0[N:2*N] = q0_1
-y0[2*N:3*N] = q0_2
+print('Here')
+q0_1,q0_2, q0_3 = isomix([P0_1,P0_2, P0_3], 300)
+
+y0[2*N:3*N] = q0_1
+y0[3*N:4*N] = q0_2
+y0[4*N:5*N] = q0_3
 
 #y0[0]  = 0
 massbal(y0, 1)
@@ -188,23 +191,42 @@ print(y_res)
 print(y_res.shape)
 # %%
 
-import matplotlib.pyplot as plt
 ls = ['-','--','-.',':']
 n_ls = -1
-for ii in range(len(t_dom))[:5000:200]:
+plt.figure()
+for ii in range(len(t_dom))[:5000:400]:
     n_ls = n_ls+1
 
     plt.plot(z, y_res[ii,0*N:1*N],)
+plt.savefig('Savedfig01.png', dpi = 100)
+# %%
+n_ls = -1
+plt.figure()
+for ii in range(len(t_dom))[:5000:400]:
+    n_ls = n_ls+1
+
+    plt.plot(z, y_res[ii,1*N:2*N],)
+plt.savefig('Savedfig02.png', dpi = 100)
 
 # %%
 n_ls = -1
-for ii in range(len(t_dom))[:5000:200]:
+plt.figure()
+for ii in range(len(t_dom))[:5000:400]:
     n_ls = n_ls+1
 
-    plt.plot(z, y_res[ii,2*N:3*N],)
+    plt.plot(z, 1 - y_res[ii,1*N:2*N] - y_res[ii,0*N:1*N] ,)
+plt.savefig('Savedfig03.png', dpi = 100)
 
 # %%
 # HERE is an Important tip!
 # Starting with high concentration makes easy to calculate
 # Make the initial y1 high !
+
+# %%
+
+import pickle
+file = open('savedresults.pickle','wb')
+
+pickle.dump(y_res, file)
+file.close()
 # %%
