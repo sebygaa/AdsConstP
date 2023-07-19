@@ -82,7 +82,7 @@ print(dd)
 def isomix(P_in,T):
     pp = []
     for ii in range(len(P_in)):
-        p_tmp = P_in[ii][:]
+        p_tmp = P_in[ii]
         #ind_tmp = P_in[ii] < 1E-4
         #p_tmp[ind_tmp] = 0
         pp.append(p_tmp)
