@@ -1,7 +1,7 @@
 # %%
 # Importing the run_ma_linvel
-from simsep import *
-
+from pyapep.simsep import *
+import numpy as np
 # %%
 N = 101
 
