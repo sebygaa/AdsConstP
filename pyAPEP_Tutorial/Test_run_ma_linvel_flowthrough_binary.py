@@ -38,6 +38,15 @@ def isomix(P_in,T):
     q2 = 4*pp[1]*0.4/(1 + 0.1*pp[0] + 0.4*pp[1])
     return [q1, q2,]
 c1.adsorbent_info(isomix, epsi, dp, rho_s,)
+# %%
+P_ran = np.linspace(0,15,101)
+q_H2, q_N2 = isomix([0.5*P_ran, 0.5*P_ran], 300)
+plt.figure(figsize = [6*0.9,4*0.9] ,dpi = 150)
+plt.plot(0.2*P_ran, q_N2, 
+         linewidth = 1.8, color = 'k')
+plt.xlabel('N$_{2}$ partial pressure (bar)')
+plt.ylabel('N$_{2}$ uptake (mol/kg)')
+plt.grid(linestyle = ':')
 
 # %%
 # Gas properties
